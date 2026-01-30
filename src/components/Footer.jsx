@@ -1,4 +1,5 @@
 import { useTheme } from '../contexts/ThemeContext'
+import { FaBirthdayCake, FaHeart } from 'react-icons/fa'
 import './Footer.css'
 
 const Footer = () => {
@@ -9,7 +10,7 @@ const Footer = () => {
       <div className="container">
         <div className="footer-content">
           <div className="footer-section">
-            <h3>🎂 Joyeux Anniversaire !</h3>
+            <h3><FaBirthdayCake /> Joyeux Anniversaire !</h3>
             <p>Tchounga Sani Nancy Ranaise</p>
             <p className="footer-date">31 Janvier</p>
           </div>
@@ -30,7 +31,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} Fait avec ❤️ pour Nancy</p>
+          <p>&copy; {new Date().getFullYear()} Fait avec <FaHeart /> pour Nancy</p>
         </div>
       </div>
     </footer>

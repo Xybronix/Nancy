@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTheme } from '../contexts/ThemeContext'
+import { FaVideo } from 'react-icons/fa'
 import './VideoSection.css'
 
 const VideoSection = () => {
@@ -63,7 +64,7 @@ const VideoSection = () => {
               onChange={handleVideoAdd}
               style={{ display: 'none' }}
             />
-            📹 Ajouter des vidéos
+            <FaVideo /> Ajouter des vidéos
           </label>
           
           <div className="video-url-input">

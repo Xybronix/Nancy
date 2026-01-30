@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTheme } from '../contexts/ThemeContext'
+import { FaUsers } from 'react-icons/fa'
 import './FriendsSection.css'
 
 const FriendsSection = () => {
@@ -49,7 +50,7 @@ const FriendsSection = () => {
               onChange={handleFriendPhotoAdd}
               style={{ display: 'none' }}
             />
-            👥 Ajouter des photos d'amies
+            <FaUsers /> Ajouter des photos d'amies
           </label>
         </div>
 
@@ -79,7 +80,7 @@ const FriendsSection = () => {
 
         {friends.length === 0 && (
           <div className="empty-state">
-            <span className="empty-icon">👥</span>
+            <span className="empty-icon"><FaUsers /></span>
             <p>Ajoute les photos de tes amies qui ont pensé à ce cadeau !</p>
           </div>
         )}

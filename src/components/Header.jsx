@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from '../contexts/ThemeContext'
+import { FaBirthdayCake, FaSun, FaMoon } from 'react-icons/fa'
 import './Header.css'
 
 const Header = () => {
@@ -18,7 +19,7 @@ const Header = () => {
     <header className={`header ${scrolled ? 'scrolled' : ''}`}>
       <div className="header-container">
         <div className="logo">
-          <span className="logo-icon">🎂</span>
+          <span className="logo-icon"><FaBirthdayCake /></span>
           <span className="logo-text">Nancy</span>
         </div>
         <nav className="nav">
@@ -30,7 +31,7 @@ const Header = () => {
           <a href="#contact" className="nav-link">Contact</a>
         </nav>
         <button className="theme-toggle" onClick={toggleTheme}>
-          {isDark ? '☀️' : '🌙'}
+          {isDark ? <FaSun /> : <FaMoon />}
         </button>
       </div>
     </header>

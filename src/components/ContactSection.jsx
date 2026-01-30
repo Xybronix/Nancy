@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTheme } from '../contexts/ThemeContext'
+import { FaEnvelope, FaPhone } from 'react-icons/fa'
 import './ContactSection.css'
 
 const ContactSection = () => {
@@ -55,7 +56,7 @@ const ContactSection = () => {
             />
           </div>
           <button className="contact-add-btn" onClick={addContact}>
-            📧 Ajouter les coordonnées
+            <FaEnvelope /> Ajouter les coordonnées
           </button>
         </div>
 
@@ -65,7 +66,7 @@ const ContactSection = () => {
               <div className="contact-info">
                 {contact.email && (
                   <div className="contact-item">
-                    <span className="contact-icon">📧</span>
+                    <span className="contact-icon"><FaEnvelope /></span>
                     <a href={`mailto:${contact.email}`} className="contact-link">
                       {contact.email}
                     </a>
@@ -73,7 +74,7 @@ const ContactSection = () => {
                 )}
                 {contact.phone && (
                   <div className="contact-item">
-                    <span className="contact-icon">📱</span>
+                    <span className="contact-icon"><FaPhone /></span>
                     <a href={`tel:${contact.phone}`} className="contact-link">
                       {contact.phone}
                     </a>
@@ -88,7 +89,7 @@ const ContactSection = () => {
 
         {contacts.length === 0 && (
           <div className="empty-state">
-            <span className="empty-icon">📧</span>
+            <span className="empty-icon"><FaEnvelope /></span>
             <p>Ajoute tes coordonnées pour rester en contact !</p>
           </div>
         )}

@@ -13,7 +13,9 @@
 }
 
 .friends-upload-btn {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   padding: 15px 40px;
   background: var(--primary-red);
   color: white;
@@ -25,6 +27,11 @@
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+.friends-upload-btn svg {
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
 .friends-upload-btn:hover {
@@ -138,6 +145,33 @@
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+[data-theme="light"] .empty-state {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  color: var(--primary-red);
+}
+
+.empty-icon svg {
+  width: 4rem;
+  height: 4rem;
+}
+
+.empty-state p {
+  font-size: 1.2rem;
 }
 
 @media (max-width: 768px) {

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTheme } from '../contexts/ThemeContext'
+import { FaStar, FaSparkles } from 'react-icons/fa'
 import './WishesSection.css'
 
 const WishesSection = () => {
@@ -39,7 +40,7 @@ const WishesSection = () => {
             rows="4"
           />
           <button className="wish-add-btn" onClick={addWish}>
-            ✨ Ajouter un souhait
+            <FaSparkles /> Ajouter un souhait
           </button>
         </div>
 
@@ -57,7 +58,7 @@ const WishesSection = () => {
 
         {wishes.length === 0 && (
           <div className="empty-state">
-            <span className="empty-icon">🌟</span>
+            <span className="empty-icon"><FaStar /></span>
             <p>Ajoute tes premiers souhaits pour commencer !</p>
           </div>
         )}

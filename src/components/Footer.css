@@ -19,6 +19,14 @@
   font-size: 1.5rem;
   margin-bottom: 20px;
   color: var(--primary-red);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-section h3 svg {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .footer-section p {
@@ -72,6 +80,15 @@
 
 [data-theme="light"] .footer-bottom {
   color: var(--primary-black);
+}
+
+.footer-bottom svg {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 5px;
+  color: var(--primary-red);
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
 @media (max-width: 768px) {

@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
+import { FaBirthdayCake } from 'react-icons/fa'
+import { GiPartyPopper } from 'react-icons/gi'
 import './LoadingScreen.css'
 
 const LoadingScreen = () => {
@@ -50,13 +52,15 @@ const LoadingScreen = () => {
   return (
     <div className="loading-screen">
       <div className="loading-content">
-        <div className="birthday-icon">🎂</div>
+        <div className="birthday-icon"><FaBirthdayCake /></div>
         <h1 className="loading-title">Joyeux Anniversaire !</h1>
         <h2 className="loading-subtitle">Tchounga Sani Nancy Ranaise</h2>
         
         {isBirthdayToday ? (
           <div className="birthday-message">
-            <p className="celebration-text">🎉 Le jour de ton anniversaire est arrivé ! 🎉</p>
+            <p className="celebration-text">
+              <GiPartyPopper /> Le jour de ton anniversaire est arrivé ! <GiPartyPopper />
+            </p>
             <p className="celebration-date">
               {new Date().toLocaleDateString('fr-FR', { 
                 weekday: 'long', 

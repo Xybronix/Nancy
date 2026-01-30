@@ -53,6 +53,9 @@
 }
 
 .wish-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   padding: 15px 40px;
   background: var(--primary-red);
   color: white;
@@ -65,6 +68,11 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   align-self: center;
+}
+
+.wish-add-btn svg {
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
 .wish-add-btn:hover {
@@ -160,8 +168,16 @@
 
 .empty-icon {
   font-size: 4rem;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 20px;
+  color: var(--primary-red);
+}
+
+.empty-icon svg {
+  width: 4rem;
+  height: 4rem;
 }
 
 .empty-state p {

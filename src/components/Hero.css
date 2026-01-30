@@ -35,6 +35,15 @@
   opacity: 0.3;
   animation: float 6s ease-in-out infinite;
   pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-red);
+}
+
+.floating-element svg {
+  width: 2rem;
+  height: 2rem;
 }
 
 .hero-content {
@@ -109,6 +118,13 @@
   animation: fadeIn 1s ease-out 1s both;
 }
 
+.hero-message svg {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 5px;
+  color: var(--primary-red);
+}
+
 .hero-photo {
   display: flex;
   justify-content: center;
@@ -151,6 +167,15 @@
 .photo-icon {
   font-size: 4rem;
   margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-red);
+}
+
+.photo-icon svg {
+  width: 4rem;
+  height: 4rem;
 }
 
 .photo-preview {

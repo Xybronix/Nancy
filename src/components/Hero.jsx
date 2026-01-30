@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { useTheme } from '../contexts/ThemeContext'
+import { GiPartyPopper } from 'react-icons/gi'
+import { FaBirthdayCake, FaCamera, FaStar } from 'react-icons/fa'
 import './Hero.css'
 
 const Hero = () => {
@@ -25,7 +27,7 @@ const Hero = () => {
               left: `${Math.random() * 100}%`,
               animationDelay: `${Math.random() * 5}s`,
               animationDuration: `${Math.random() * 3 + 2}s`
-            }}>🎉</div>
+            }}><GiPartyPopper /></div>
           ))}
         </div>
       </div>
@@ -40,7 +42,7 @@ const Hero = () => {
           <p className="hero-date">31 Janvier</p>
           <p className="hero-message">
             Que cette nouvelle année de ta vie soit remplie de joie, de bonheur et de réussite ! 
-            Nous te souhaitons tout le meilleur pour cette nouvelle étape. 🎂✨
+            Nous te souhaitons tout le meilleur pour cette nouvelle étape. <FaBirthdayCake /> <FaStar />
           </p>
         </div>
         <div className="hero-photo">
@@ -49,7 +51,7 @@ const Hero = () => {
               <img src={photo} alt="Nancy" className="photo-preview" />
             ) : (
               <div className="photo-placeholder">
-                <span className="photo-icon">📸</span>
+                <span className="photo-icon"><FaCamera /></span>
                 <p>Ajoute ta photo</p>
               </div>
             )}
