@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import './Confetti.css'
 
 const Confetti = () => {
   const [confetti, setConfetti] = useState([])
@@ -23,11 +22,11 @@ const Confetti = () => {
   }, [])
 
   return (
-    <div className="confetti-container">
+    <div className="fixed top-0 left-0 w-full h-full pointer-events-none z-[10000] overflow-hidden">
       {confetti.map((piece) => (
         <div
           key={piece.id}
-          className="confetti-piece"
+          className="absolute -top-2.5 rounded-full animate-[confetti-fall_linear_forwards]"
           style={{
             left: `${piece.left}%`,
             backgroundColor: piece.color,
@@ -38,6 +37,18 @@ const Confetti = () => {
           }}
         />
       ))}
+      <style>{`
+        @keyframes confetti-fall {
+          0% {
+            transform: translateY(0) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(100vh) rotate(720deg);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   )
 }

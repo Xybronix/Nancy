@@ -11,8 +11,10 @@ Un site web festif et interactif créé pour célébrer l'anniversaire de Nancy 
 - 🌟 **Souhaits pour la nouvelle année** avec possibilité d'ajouter plusieurs souhaits
 - 👥 **Section amies** pour afficher les photos des personnes qui ont créé ce site
 - 📧 **Coordonnées** pour ajouter email et/ou numéro de téléphone
+- 🎵 **Musique de fond** avec contrôle play/pause (Naza - "Aujourd'hui c'est ton jour")
 - 🎨 **Animations fluides** et effets visuels festifs
 - 📱 **Design responsive** adapté à tous les écrans
+- 💝 **Section crédits** pour les créateurs du site
 
 ## 🚀 Démarrage du projet
 
@@ -161,14 +163,60 @@ Nancy/
 
 - **React** - Bibliothèque JavaScript pour l'interface utilisateur
 - **Vite** - Outil de build rapide
-- **Framer Motion** - Animations fluides (optionnel, peut être ajouté)
-- **CSS3** - Styles et animations
+- **Tailwind CSS** - Framework CSS utilitaire
+- **React Icons** - Bibliothèque d'icônes
+- **localStorage** - Stockage local des données
+
+## ⚙️ Configuration et Déploiement
+
+### Mode Édition vs Mode Production
+
+Le site a deux modes de fonctionnement :
+
+1. **Mode Édition** (développement) : Permet d'ajouter/modifier/supprimer tous les contenus
+2. **Mode Production** : Lecture seule, seuls les souhaits peuvent être ajoutés
+
+### Configuration
+
+Créez un fichier `.env` à la racine du projet :
+
+```env
+# Mode édition activé (true) ou désactivé (false)
+VITE_ENABLE_EDITING=true
+```
+
+### Workflow de Déploiement
+
+1. **Phase de préparation** (Mode Édition) :
+   - Mettez `VITE_ENABLE_EDITING=true` dans `.env`
+   - Ajoutez toutes les photos, vidéos, coordonnées, etc.
+   - Utilisez le panneau Admin (icône en bas à droite) pour exporter les données
+   - Le fichier `site-data.json` sera téléchargé
+
+2. **Phase de déploiement** (Mode Production) :
+   - Copiez le fichier `site-data.json` exporté dans `public/data/site-data.json`
+   - Mettez `VITE_ENABLE_EDITING=false` dans `.env`
+   - Rebuild : `npm run build`
+   - Déployez : `npm run deploy`
+
+3. **Résultat** :
+   - Les visiteurs verront tous les contenus préchargés
+   - Ils ne pourront plus modifier les photos/vidéos/contacts
+   - Ils pourront toujours ajouter des souhaits
+
+### Panneau Admin
+
+En mode édition, un panneau admin apparaît en bas à droite avec :
+- **Exporter les données** : Télécharge un fichier JSON avec toutes les données
+- **Importer des données** : Charge un fichier JSON pour restaurer les données
+- **Effacer tout** : Supprime toutes les données (avec confirmation)
 
 ## 📝 Notes
 
-- Les photos et vidéos ajoutées sont stockées localement dans le navigateur (localStorage n'est pas utilisé pour les fichiers, ils sont en mémoire)
-- Pour un stockage permanent, vous devriez intégrer un backend ou un service de stockage cloud
-- Le site fonctionne entièrement côté client
+- Les données sont sauvegardées automatiquement dans localStorage
+- Pour la production, les données sont chargées depuis `public/data/site-data.json`
+- Les souhaits sont toujours modifiables même en mode production
+- Le site fonctionne entièrement côté client, sans backend nécessaire
 
 ## 🎉 Félicitations !
 
