@@ -11,30 +11,148 @@ const VideoSection = () => {
   })
 
   useEffect(() => {
-    localStorage.setItem('birthday-videos', JSON.stringify(videos))
+    try {
+      localStorage.setItem('birthday-videos', JSON.stringify(videos))
+    } catch (error) {
+      if (error.name === 'QuotaExceededError') {
+        alert('Espace de stockage insuffisant. Veuillez supprimer certaines vidéos.')
+        // Retirer la dernière vidéo ajoutée
+        setVideos(prev => prev.slice(0, -1))
+      } else {
+        console.error('Erreur lors de la sauvegarde:', error)
+      }
+    }
   }, [videos])
 
   const handleVideoAdd = (e) => {
     if (!SITE_CONFIG.ENABLE_EDITING) return
     if (e.target.files && e.target.files.length > 0) {
-      const newVideos = Array.from(e.target.files).map(file => {
+      const MAX_FILE_SIZE = 75 * 1024 * 1024 // 75 MB max par vidéo
+      const files = Array.from(e.target.files).filter(file => {
+        if (file.size > MAX_FILE_SIZE) {
+          alert(`La vidéo "${file.name}" est trop grande (${(file.size / 1024 / 1024).toFixed(2)} MB). Taille maximale : 75 MB.`)
+          return false
+        }
+        return true
+      })
+
+      if (files.length === 0) return
+
+      const newVideos = files.map(file => {
         const reader = new FileReader()
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
+          reader.onerror = () => {
+            reject(new Error(`Erreur lors de la lecture du fichier "${file.name}"`))
+          }
           reader.onload = (event) => {
-            resolve({
-              id: Date.now() + Math.random(),
-              url: event.target.result,
-              name: file.name,
-              type: file.type
-            })
+            try {
+              const dataUrl = event.target.result
+              // Vérifier la taille des données encodées (base64 augmente la taille d'environ 33%)
+              // localStorage a généralement une limite de 5-10MB, mais on essaie quand même pour les fichiers jusqu'à 75MB
+              // Si ça échoue, on gérera l'erreur dans le catch
+              resolve({
+                id: Date.now() + Math.random(),
+                url: dataUrl,
+                name: file.name,
+                type: file.type || 'video/mp4', // Type par défaut si non détecté
+                size: file.size
+              })
+            } catch (error) {
+              reject(new Error(`Erreur lors du traitement de "${file.name}": ${error.message}`))
+            }
           }
           reader.readAsDataURL(file)
         })
       })
 
-      Promise.all(newVideos).then(loadedVideos => {
-        setVideos([...videos, ...loadedVideos])
-      })
+      Promise.all(newVideos)
+        .then(loadedVideos => {
+          try {
+            setVideos([...videos, ...loadedVideos])
+          } catch (error) {
+            if (error.name === 'QuotaExceededError') {
+              alert('Espace de stockage insuffisant. Les vidéos locales sont limitées par le navigateur. Veuillez supprimer certaines vidéos ou utiliser des URLs externes (YouTube, Vimeo, etc.) pour les grandes vidéos.')
+            } else {
+              alert('Erreur lors de l\'ajout des vidéos: ' + error.message)
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Erreur lors du chargement des vidéos:', error)
+          // Afficher un message d'erreur plus informatif
+          if (error.message.includes('trop volumineux') || error.message.includes('QuotaExceeded')) {
+            alert(`Impossible d'ajouter la vidéo : ${error.message}\n\nConseil : Pour les vidéos de plus de 10-15 MB, utilisez plutôt une URL externe (YouTube, Vimeo) ou hébergez-la sur un service de stockage en ligne.`)
+          } else {
+            alert(`Erreur lors du chargement de la vidéo : ${error.message}\n\nVérifiez que le fichier est bien une vidéo valide.`)
+          }
+        })
+    }
+  }
+
+  // Convertir les URLs YouTube/Vimeo en URLs embed
+  const convertToEmbedUrl = (url) => {
+    try {
+      // Nettoyer l'URL
+      url = url.trim()
+      
+      // YouTube - format standard
+      if (url.includes('youtube.com/watch')) {
+        const urlObj = new URL(url)
+        const videoId = urlObj.searchParams.get('v')
+        if (videoId) {
+          return `https://www.youtube.com/embed/${videoId}`
+        }
+      }
+      
+      // YouTube - format court
+      if (url.includes('youtu.be/')) {
+        const videoId = url.split('youtu.be/')[1]?.split('?')[0]?.split('&')[0]
+        if (videoId) {
+          return `https://www.youtube.com/embed/${videoId}`
+        }
+      }
+      
+      // YouTube - format mobile
+      if (url.includes('m.youtube.com/watch')) {
+        const urlObj = new URL(url)
+        const videoId = urlObj.searchParams.get('v')
+        if (videoId) {
+          return `https://www.youtube.com/embed/${videoId}`
+        }
+      }
+      
+      // Vimeo
+      if (url.includes('vimeo.com/')) {
+        const videoId = url.split('vimeo.com/')[1]?.split('?')[0]?.split('/')[0]
+        if (videoId && !isNaN(videoId)) {
+          return `https://player.vimeo.com/video/${videoId}`
+        }
+      }
+      
+      // Dailymotion
+      if (url.includes('dailymotion.com/video/')) {
+        const videoId = url.split('dailymotion.com/video/')[1]?.split('?')[0]?.split('_')[0]
+        if (videoId) {
+          return `https://www.dailymotion.com/embed/video/${videoId}`
+        }
+      }
+      
+      // Si c'est déjà une URL embed, la retourner telle quelle
+      if (url.includes('/embed/') || url.includes('player.')) {
+        return url
+      }
+      
+      // Si c'est une URL directe vers un fichier vidéo (mp4, webm, etc.)
+      if (url.match(/\.(mp4|webm|ogg|mov|avi)(\?.*)?$/i)) {
+        return url
+      }
+      
+      // Sinon, retourner l'URL telle quelle (peut être une URL directe)
+      return url
+    } catch (error) {
+      console.error('Erreur lors de la conversion de l\'URL:', error)
+      // En cas d'erreur, retourner l'URL originale
+      return url
     }
   }
 
@@ -42,9 +160,10 @@ const VideoSection = () => {
     if (!SITE_CONFIG.ENABLE_EDITING) return
     if (e.target.value.trim()) {
       const videoUrl = e.target.value.trim()
+      const embedUrl = convertToEmbedUrl(videoUrl)
       setVideos([...videos, {
         id: Date.now(),
-        url: videoUrl,
+        url: embedUrl,
         name: 'Vidéo externe',
         type: 'external'
       }])

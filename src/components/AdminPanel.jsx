@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { FaDownload, FaUpload, FaTrash, FaInfoCircle } from 'react-icons/fa'
-import { exportDataAsJSON, importDataFromJSON, loadAllData, saveAllData } from '../utils/dataManager'
+import { FaDownload, FaUpload, FaTrash, FaInfoCircle, FaFileArchive } from 'react-icons/fa'
+import { exportDataAsJSON, exportDataAsZIP, importDataFromJSON, loadAllData, saveAllData } from '../utils/dataManager'
 import { SITE_CONFIG } from '../config/siteConfig'
 
 const AdminPanel = () => {
@@ -8,9 +8,26 @@ const AdminPanel = () => {
   const [importError, setImportError] = useState('')
   const [importSuccess, setImportSuccess] = useState('')
 
-  const handleExport = () => {
-    const data = exportDataAsJSON()
-    setImportSuccess('Données exportées avec succès !')
+  const [isExporting, setIsExporting] = useState(false)
+
+  const handleExport = async () => {
+    setIsExporting(true)
+    try {
+      await exportDataAsZIP()
+      setImportSuccess('✅ Export réussi ! ZIP téléchargé avec toutes les images/vidéos. Extrayez-le dans public/data/ avant de déployer.')
+      setTimeout(() => setImportSuccess(''), 5000)
+    } catch (error) {
+      console.error('Erreur lors de l\'export:', error)
+      setImportError('Erreur lors de l\'export. Essayez d\'exporter en JSON simple.')
+      setTimeout(() => setImportError(''), 5000)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleExportJSON = () => {
+    exportDataAsJSON()
+    setImportSuccess('JSON exporté (sans fichiers). Utilisez "Exporter ZIP" pour inclure les images/vidéos.')
     setTimeout(() => setImportSuccess(''), 3000)
   }
 
@@ -107,9 +124,17 @@ const AdminPanel = () => {
           <div className="space-y-3">
             <button
               onClick={handleExport}
-              className="w-full flex items-center justify-center gap-2 bg-primary-red text-white px-4 py-2 rounded hover:bg-secondary-red transition-colors"
+              disabled={isExporting}
+              className="w-full flex items-center justify-center gap-2 bg-primary-red text-white px-4 py-2 rounded hover:bg-secondary-red transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FaDownload /> Exporter les données
+              <FaFileArchive /> {isExporting ? 'Export en cours...' : 'Exporter ZIP (avec fichiers)'}
+            </button>
+            
+            <button
+              onClick={handleExportJSON}
+              className="w-full flex items-center justify-center gap-2 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors text-sm"
+            >
+              <FaDownload /> Exporter JSON (simple)
             </button>
 
             <label className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors cursor-pointer">
@@ -132,7 +157,11 @@ const AdminPanel = () => {
 
           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              <strong>Instructions:</strong> Exportez les données avant de déployer, puis mettez le fichier JSON dans <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">public/data/</code> et mettez <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">VITE_ENABLE_EDITING=false</code> dans <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">.env</code>
+              <strong>Instructions:</strong>
+              <br />1. Cliquez sur "Exporter ZIP" pour télécharger toutes les données avec les fichiers
+              <br />2. Extrayez le ZIP dans <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">public/data/</code>
+              <br />3. Mettez <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">VITE_ENABLE_EDITING=false</code> dans <code className="bg-gray-100 dark:bg-gray-700 px-1 rounded">.env</code>
+              <br />4. Déployez ! Les fichiers seront préservés.
             </p>
           </div>
         </div>

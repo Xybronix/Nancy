@@ -26,15 +26,28 @@ function App() {
 
   useEffect(() => {
     // Charger les données depuis le fichier JSON si en mode production
+    // IMPORTANT: Les données ajoutées en ligne (localStorage) ont toujours la priorité
     if (!SITE_CONFIG.ENABLE_EDITING) {
       loadFromJSONFile(SITE_CONFIG.DATA_FILE).then((data) => {
         if (data) {
-          console.log('Données chargées depuis le fichier JSON')
+          // Vérifier si les données viennent du JSON ou de localStorage
+          const localData = loadAllData()
+          const hasLocalData = Object.values(localData).some(v => {
+            if (v === null || v === undefined) return false
+            if (Array.isArray(v)) return v.length > 0
+            return true
+          })
+          
+          if (hasLocalData) {
+            console.log('✅ Données en ligne (localStorage) conservées - Les données ajoutées par les visiteurs sont préservées')
+          } else {
+            console.log('📦 Données initiales chargées depuis le fichier JSON')
+          }
         } else {
           // Si pas de fichier JSON, charger depuis localStorage
           const localData = loadAllData()
           if (Object.values(localData).some(v => v && (Array.isArray(v) ? v.length > 0 : true))) {
-            console.log('Données chargées depuis localStorage')
+            console.log('💾 Données chargées depuis localStorage (données ajoutées en ligne)')
           }
         }
       })

@@ -134,28 +134,51 @@ Les couleurs principales sont définies dans `src/index.css` via les variables C
 
 ```
 Nancy/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml
 ├── public/
+│   ├── data/
+│   │   └── site-data.json
+│   └── music/
+│       └── README.md
 ├── src/
 │   ├── components/
+│   │   ├── AdminPanel.jsx
+│   │   ├── BackgroundMusic.jsx
 │   │   ├── Confetti.jsx
 │   │   ├── ContactSection.jsx
+│   │   ├── CreditsSection.jsx
+│   │   ├── FloatingHearts.jsx
 │   │   ├── Footer.jsx
 │   │   ├── FriendsSection.jsx
 │   │   ├── Header.jsx
 │   │   ├── Hero.jsx
 │   │   ├── LoadingScreen.jsx
 │   │   ├── PhotoGallery.jsx
+│   │   ├── PoemSection.jsx
+│   │   ├── ScrollToTop.jsx
+│   │   ├── SurpriseMessage.jsx
 │   │   ├── VideoSection.jsx
 │   │   └── WishesSection.jsx
+│   ├── config/
+│   │   └── siteConfig.js
 │   ├── contexts/
 │   │   └── ThemeContext.jsx
+│   ├── utils/
+│   │   └── dataManager.js
 │   ├── App.jsx
-│   ├── App.css
 │   ├── index.css
 │   └── main.jsx
 ├── index.html
 ├── package.json
+├── postcss.config.js
+├── tailwind.config.js
 ├── vite.config.js
+├── .env (à créer)
+├── .gitignore
+├── FIX_DEPLOYMENT_ERROR.md
+├── INSTRUCTIONS_DEPLOIEMENT.md
 └── README.md
 ```
 

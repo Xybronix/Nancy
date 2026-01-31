@@ -8,4 +8,12 @@ export const SITE_CONFIG = {
   
   // Fichier JSON pour sauvegarder les données
   DATA_FILE: '/data/site-data.json',
+  
+  // Configuration de l'anniversaire
+  BIRTHDAY_DAY: 31, // Jour de l'anniversaire (31)
+  BIRTHDAY_MONTH: 0, // Mois (0 = janvier, 11 = décembre)
+  
+  // Nombre de jours après l'anniversaire pour commencer le compteur de l'année suivante
+  // Par défaut: 1 jour (le compteur commence le 1er février si l'anniversaire est le 31 janvier)
+  COUNTDOWN_START_OFFSET_DAYS: 1,
 }
