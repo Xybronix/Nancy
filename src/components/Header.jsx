@@ -40,7 +40,7 @@ const Header = () => {
                 document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
               }}
             >
-              {id === 'home' ? 'Accueil' : id === 'poem' ? 'Poème' : id === 'photos' ? 'Photos' : id === 'videos' ? 'Vidéos' : id === 'wishes' ? 'Souhaits' : id === 'friends' ? 'Amies' : id === 'contact' ? 'Contact' : 'Crédits'}
+              {id === 'home' ? 'Accueil' : id === 'poem' ? 'Poème' : id === 'photos' ? 'Photos' : id === 'videos' ? 'Vidéos' : id === 'wishes' ? 'Souhaits' : id === 'friends' ? 'Amies' : id === 'contact' ? 'Contact' : 'Auteurs'}
             </a>
           ))}
         </nav>
