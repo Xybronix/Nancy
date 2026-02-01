@@ -9,17 +9,25 @@ const AdminPanel = () => {
   const [importSuccess, setImportSuccess] = useState('')
 
   const [isExporting, setIsExporting] = useState(false)
+  const [exportProgress, setExportProgress] = useState('')
 
   const handleExport = async () => {
     setIsExporting(true)
+    setExportProgress('Préparation de l\'export...')
+    setImportError('')
+    setImportSuccess('')
+    
     try {
+      setExportProgress('Chargement des fichiers depuis IndexedDB...')
       await exportDataAsZIP()
-      setImportSuccess('✅ Export réussi ! ZIP téléchargé avec toutes les images/vidéos. Extrayez-le dans public/data/ avant de déployer.')
-      setTimeout(() => setImportSuccess(''), 5000)
+      setExportProgress('')
+      setImportSuccess('✅ Export réussi ! ZIP téléchargé avec toutes les images/vidéos (peut contenir plusieurs GB). Extrayez-le dans public/data/ avant de déployer.')
+      setTimeout(() => setImportSuccess(''), 8000)
     } catch (error) {
       console.error('Erreur lors de l\'export:', error)
-      setImportError('Erreur lors de l\'export. Essayez d\'exporter en JSON simple.')
-      setTimeout(() => setImportError(''), 5000)
+      setExportProgress('')
+      setImportError(`Erreur lors de l'export: ${error.message}. L'export peut prendre du temps pour de gros volumes.`)
+      setTimeout(() => setImportError(''), 8000)
     } finally {
       setIsExporting(false)
     }
@@ -122,6 +130,11 @@ const AdminPanel = () => {
           )}
 
           <div className="space-y-3">
+            {exportProgress && (
+              <div className="mb-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-blue-600 dark:blue-400 text-sm">
+                {exportProgress}
+              </div>
+            )}
             <button
               onClick={handleExport}
               disabled={isExporting}

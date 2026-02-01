@@ -84,12 +84,18 @@ const getFileExtension = (mimeType, defaultExt = 'bin') => {
 }
 
 // Exporter toutes les données en ZIP avec fichiers (images/vidéos)
+// OPTIMISÉ pour gérer des centaines de GB sans limitation
 export const exportDataAsZIP = async () => {
   const JSZip = (await import('jszip')).default
+  const { exportAllFilesFromIndexedDB, STORE_NAMES } = await import('./indexedDBManager')
+  
   const zip = new JSZip()
   const data = loadAllData()
   const timestamp = Date.now()
   let fileCounter = 0
+  
+  // Charger tous les fichiers depuis IndexedDB (peut contenir des GB)
+  const indexedDBFiles = await exportAllFilesFromIndexedDB()
   
   // Créer les dossiers
   const imagesFolder = zip.folder('data/images')
@@ -105,82 +111,113 @@ export const exportDataAsZIP = async () => {
     heroPhoto: null,
   }
   
-  // Traiter les photos
+  // Traiter les photos (depuis localStorage ou IndexedDB)
   if (data.photos && Array.isArray(data.photos)) {
-    data.photos.forEach((photo, index) => {
-      if (photo.url && photo.url.startsWith('data:')) {
+    for (const photo of data.photos) {
+      let photoData = photo.url
+      
+      // Si la photo est dans IndexedDB, la charger
+      if (photo.id && indexedDBFiles.photos[photo.id]) {
+        photoData = indexedDBFiles.photos[photo.id]
+      }
+      
+      if (photoData && photoData.startsWith('data:')) {
         // Extraire le type MIME
-        const mimeMatch = photo.url.match(/data:([^;]+);base64,/)
+        const mimeMatch = photoData.match(/data:([^;]+);base64,/)
         const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg'
         const extension = getFileExtension(mimeType, 'jpg')
         
         // Nom de fichier unique avec compteur
         fileCounter++
-        const fileName = `photo_${photo.id || index}_${timestamp}_${fileCounter}.${extension}`
+        const fileName = `photo_${photo.id || fileCounter}_${timestamp}_${fileCounter}.${extension}`
         const filePath = `images/${fileName}`
         
-        // Convertir base64 en Blob et ajouter au ZIP
-        const blob = base64ToBlob(photo.url, mimeType)
+        // Convertir base64 en Blob et ajouter au ZIP (optimisé pour gros fichiers)
+        const blob = base64ToBlob(photoData, mimeType)
         imagesFolder.file(fileName, blob)
         
         // Référencer le fichier dans le JSON
         exportData.photos.push({
           id: photo.id,
-          url: `/data/${filePath}`, // Chemin relatif pour le site
+          url: `/data/${filePath}`,
           name: photo.name || fileName
         })
-      } else {
+      } else if (photo.url && !photo.url.startsWith('data:') && !photo.url.startsWith('indexeddb://')) {
         // URL externe, garder tel quel
         exportData.photos.push(photo)
       }
-    })
+    }
   }
   
-  // Traiter les vidéos
+  // Traiter les vidéos (depuis localStorage ou IndexedDB)
   if (data.videos && Array.isArray(data.videos)) {
-    data.videos.forEach((video, index) => {
-      if (video.type !== 'external' && video.url && video.url.startsWith('data:')) {
+    for (const video of data.videos) {
+      if (video.type === 'external') {
+        // URL externe, garder tel quel
+        exportData.videos.push(video)
+        continue
+      }
+      
+      let videoData = video.url
+      
+      // Si la vidéo est dans IndexedDB, la charger
+      if (video.id && indexedDBFiles.videos[video.id]) {
+        videoData = indexedDBFiles.videos[video.id]
+      } else if (video.url && video.url.startsWith('indexeddb://')) {
+        // Charger depuis IndexedDB si c'est une référence
+        const videoId = video.url.replace('indexeddb://', '')
+        const indexedData = await (await import('./indexedDBManager')).loadFileFromIndexedDB(STORE_NAMES.VIDEOS, videoId)
+        if (indexedData) {
+          videoData = indexedData
+        }
+      }
+      
+      if (videoData && videoData.startsWith('data:')) {
         // Extraire le type MIME
-        const mimeMatch = video.url.match(/data:([^;]+);base64,/)
+        const mimeMatch = videoData.match(/data:([^;]+);base64,/)
         const mimeType = mimeMatch ? mimeMatch[1] : (video.type || 'video/mp4')
         const extension = getFileExtension(mimeType, 'mp4')
         
         // Nom de fichier unique avec compteur
         fileCounter++
-        const fileName = `video_${video.id || index}_${timestamp}_${fileCounter}.${extension}`
+        const fileName = `video_${video.id || fileCounter}_${timestamp}_${fileCounter}.${extension}`
         const filePath = `videos/${fileName}`
         
-        // Convertir base64 en Blob et ajouter au ZIP
-        const blob = base64ToBlob(video.url, mimeType)
+        // Convertir base64 en Blob et ajouter au ZIP (optimisé pour gros fichiers)
+        const blob = base64ToBlob(videoData, mimeType)
         videosFolder.file(fileName, blob)
         
         // Référencer le fichier dans le JSON
         exportData.videos.push({
           id: video.id,
-          url: `/data/${filePath}`, // Chemin relatif pour le site
+          url: `/data/${filePath}`,
           name: video.name || fileName,
           type: mimeType
         })
-      } else {
-        // URL externe ou embed, garder tel quel
-        exportData.videos.push(video)
       }
-    })
+    }
   }
   
   // Traiter les photos d'amies
   if (data.friends && Array.isArray(data.friends)) {
-    data.friends.forEach((friend, index) => {
-      if (friend.photo && friend.photo.startsWith('data:')) {
-        const mimeMatch = friend.photo.match(/data:([^;]+);base64,/)
+    for (const friend of data.friends) {
+      let friendPhoto = friend.photo
+      
+      // Si la photo est dans IndexedDB, la charger
+      if (friend.id && indexedDBFiles.friends[friend.id]) {
+        friendPhoto = indexedDBFiles.friends[friend.id]
+      }
+      
+      if (friendPhoto && friendPhoto.startsWith('data:')) {
+        const mimeMatch = friendPhoto.match(/data:([^;]+);base64,/)
         const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg'
         const extension = getFileExtension(mimeType, 'jpg')
         
         fileCounter++
-        const fileName = `friend_${friend.id || index}_${timestamp}_${fileCounter}.${extension}`
+        const fileName = `friend_${friend.id || fileCounter}_${timestamp}_${fileCounter}.${extension}`
         const filePath = `images/${fileName}`
         
-        const blob = base64ToBlob(friend.photo, mimeType)
+        const blob = base64ToBlob(friendPhoto, mimeType)
         imagesFolder.file(fileName, blob)
         
         exportData.friends.push({
@@ -191,12 +228,17 @@ export const exportDataAsZIP = async () => {
       } else {
         exportData.friends.push(friend)
       }
-    })
+    }
   }
   
   // Traiter la photo hero
-  if (data.heroPhoto && data.heroPhoto.startsWith('data:')) {
-    const mimeMatch = data.heroPhoto.match(/data:([^;]+);base64,/)
+  let heroPhotoData = data.heroPhoto
+  if (indexedDBFiles.heroPhoto) {
+    heroPhotoData = indexedDBFiles.heroPhoto
+  }
+  
+  if (heroPhotoData && heroPhotoData.startsWith('data:')) {
+    const mimeMatch = heroPhotoData.match(/data:([^;]+);base64,/)
     const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg'
     const extension = getFileExtension(mimeType, 'jpg')
     
@@ -204,19 +246,23 @@ export const exportDataAsZIP = async () => {
     const fileName = `hero_${timestamp}_${fileCounter}.${extension}`
     const filePath = `images/${fileName}`
     
-    const blob = base64ToBlob(data.heroPhoto, mimeType)
+    const blob = base64ToBlob(heroPhotoData, mimeType)
     imagesFolder.file(fileName, blob)
     
     exportData.heroPhoto = `/data/${filePath}`
-  } else if (data.heroPhoto) {
+  } else if (data.heroPhoto && !data.heroPhoto.startsWith('indexeddb://')) {
     exportData.heroPhoto = data.heroPhoto
   }
   
   // Ajouter le JSON au ZIP
   zip.file('data/site-data.json', JSON.stringify(exportData, null, 2))
   
-  // Générer le ZIP
-  const zipBlob = await zip.generateAsync({ type: 'blob' })
+  // Générer le ZIP avec compression optimisée pour gros fichiers
+  const zipBlob = await zip.generateAsync({ 
+    type: 'blob',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 6 } // Niveau de compression équilibré
+  })
   
   // Télécharger le ZIP
   const url = URL.createObjectURL(zipBlob)

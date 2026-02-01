@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useTheme } from '../contexts/ThemeContext'
 import { FaVideo } from 'react-icons/fa'
 import { SITE_CONFIG } from '../config/siteConfig'
+import { saveFileToIndexedDB, loadFileFromIndexedDB, deleteFileFromIndexedDB, STORE_NAMES } from '../utils/indexedDBManager'
 
 const VideoSection = () => {
   const { isDark } = useTheme()
@@ -10,27 +11,69 @@ const VideoSection = () => {
     return saved ? JSON.parse(saved) : []
   })
 
+  // Charger les données depuis IndexedDB au montage
+  useEffect(() => {
+    const loadVideosFromIndexedDB = async () => {
+      // Pour les vidéos locales stockées dans IndexedDB, charger les données
+      const videosWithData = await Promise.all(
+        videos.map(async (video) => {
+          // Si c'est une URL externe, garder tel quel
+          if (video.type === 'external' || (video.url && !video.url.startsWith('indexeddb://'))) {
+            return video
+          }
+          
+          // Si c'est une référence IndexedDB, charger les données
+          if (video.isInIndexedDB !== false) {
+            const fileData = await loadFileFromIndexedDB(STORE_NAMES.VIDEOS, video.id)
+            if (fileData) {
+              return { ...video, url: fileData }
+            }
+          }
+          
+          return video
+        })
+      )
+      
+      // Mettre à jour seulement si on a chargé des données depuis IndexedDB
+      const hasNewData = videosWithData.some((v, i) => v.url !== videos[i]?.url)
+      if (hasNewData) {
+        setVideos(videosWithData)
+      }
+    }
+    
+    if (videos.length > 0) {
+      loadVideosFromIndexedDB()
+    }
+  }, []) // Seulement au montage
+
+  // Sauvegarder seulement les métadonnées dans localStorage (pas les fichiers)
   useEffect(() => {
     try {
-      localStorage.setItem('birthday-videos', JSON.stringify(videos))
+      // Sauvegarder seulement les métadonnées (sans les data URLs)
+      // Les fichiers sont dans IndexedDB, pas dans localStorage
+      const metadata = videos.map(v => ({
+        id: v.id,
+        name: v.name,
+        type: v.type,
+        size: v.size,
+        isInIndexedDB: v.isInIndexedDB !== false, // Par défaut true si pas défini
+        url: v.type === 'external' ? v.url : (v.url && !v.url.startsWith('data:') ? v.url : 'indexeddb://' + v.id)
+      }))
+      localStorage.setItem('birthday-videos', JSON.stringify(metadata))
     } catch (error) {
-      if (error.name === 'QuotaExceededError') {
-        alert('Espace de stockage insuffisant. Veuillez supprimer certaines vidéos.')
-        // Retirer la dernière vidéo ajoutée
-        setVideos(prev => prev.slice(0, -1))
-      } else {
-        console.error('Erreur lors de la sauvegarde:', error)
-      }
+      // Si localStorage est plein, ce n'est pas grave, on a IndexedDB
+      // Ne pas afficher d'erreur, juste logger
+      console.warn('Impossible de sauvegarder les métadonnées dans localStorage (IndexedDB utilisé):', error)
     }
   }, [videos])
 
   const handleVideoAdd = (e) => {
     if (!SITE_CONFIG.ENABLE_EDITING) return
     if (e.target.files && e.target.files.length > 0) {
-      const MAX_FILE_SIZE = 75 * 1024 * 1024 // 75 MB max par vidéo
+      const MAX_FILE_SIZE = 256 * 1024 * 1024 // 256 MB max par vidéo
       const files = Array.from(e.target.files).filter(file => {
         if (file.size > MAX_FILE_SIZE) {
-          alert(`La vidéo "${file.name}" est trop grande (${(file.size / 1024 / 1024).toFixed(2)} MB). Taille maximale : 75 MB.`)
+          alert(`La vidéo "${file.name}" est trop grande (${(file.size / 1024 / 1024).toFixed(2)} MB). Taille maximale : 256 MB.`)
           return false
         }
         return true
@@ -38,53 +81,46 @@ const VideoSection = () => {
 
       if (files.length === 0) return
 
-      const newVideos = files.map(file => {
-        const reader = new FileReader()
-        return new Promise((resolve, reject) => {
-          reader.onerror = () => {
-            reject(new Error(`Erreur lors de la lecture du fichier "${file.name}"`))
+      const newVideos = files.map(async (file) => {
+        const videoId = Date.now() + Math.random()
+        
+        try {
+          // Lire le fichier en base64 pour l'affichage immédiat
+          const dataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onerror = () => reject(new Error(`Erreur lors de la lecture du fichier "${file.name}"`))
+            reader.onload = (event) => resolve(event.target.result)
+            reader.readAsDataURL(file)
+          })
+          
+          // Sauvegarder dans IndexedDB pour le stockage long terme
+          try {
+            await saveFileToIndexedDB(STORE_NAMES.VIDEOS, videoId, dataUrl)
+          } catch (indexedDBError) {
+            console.warn('Impossible de sauvegarder dans IndexedDB, utilisation de localStorage:', indexedDBError)
+            // Continuer même si IndexedDB échoue
           }
-          reader.onload = (event) => {
-            try {
-              const dataUrl = event.target.result
-              // Vérifier la taille des données encodées (base64 augmente la taille d'environ 33%)
-              // localStorage a généralement une limite de 5-10MB, mais on essaie quand même pour les fichiers jusqu'à 75MB
-              // Si ça échoue, on gérera l'erreur dans le catch
-              resolve({
-                id: Date.now() + Math.random(),
-                url: dataUrl,
-                name: file.name,
-                type: file.type || 'video/mp4', // Type par défaut si non détecté
-                size: file.size
-              })
-            } catch (error) {
-              reject(new Error(`Erreur lors du traitement de "${file.name}": ${error.message}`))
-            }
+          
+          return {
+            id: videoId,
+            url: dataUrl, // Pour l'affichage immédiat
+            name: file.name,
+            type: file.type || 'video/mp4',
+            size: file.size,
+            isInIndexedDB: true
           }
-          reader.readAsDataURL(file)
-        })
+        } catch (error) {
+          throw new Error(`Erreur lors du traitement de "${file.name}": ${error.message}`)
+        }
       })
 
       Promise.all(newVideos)
         .then(loadedVideos => {
-          try {
-            setVideos([...videos, ...loadedVideos])
-          } catch (error) {
-            if (error.name === 'QuotaExceededError') {
-              alert('Espace de stockage insuffisant. Les vidéos locales sont limitées par le navigateur. Veuillez supprimer certaines vidéos ou utiliser des URLs externes (YouTube, Vimeo, etc.) pour les grandes vidéos.')
-            } else {
-              alert('Erreur lors de l\'ajout des vidéos: ' + error.message)
-            }
-          }
+          setVideos([...videos, ...loadedVideos])
         })
         .catch(error => {
           console.error('Erreur lors du chargement des vidéos:', error)
-          // Afficher un message d'erreur plus informatif
-          if (error.message.includes('trop volumineux') || error.message.includes('QuotaExceeded')) {
-            alert(`Impossible d'ajouter la vidéo : ${error.message}\n\nConseil : Pour les vidéos de plus de 10-15 MB, utilisez plutôt une URL externe (YouTube, Vimeo) ou hébergez-la sur un service de stockage en ligne.`)
-          } else {
-            alert(`Erreur lors du chargement de la vidéo : ${error.message}\n\nVérifiez que le fichier est bien une vidéo valide.`)
-          }
+          alert(`Erreur lors du chargement de la vidéo : ${error.message}\n\nVérifiez que le fichier est bien une vidéo valide.`)
         })
     }
   }
@@ -171,8 +207,17 @@ const VideoSection = () => {
     }
   }
 
-  const removeVideo = (id) => {
+  const removeVideo = async (id) => {
     if (!SITE_CONFIG.ENABLE_EDITING) return
+    
+    // Supprimer de IndexedDB
+    try {
+      await deleteFileFromIndexedDB(STORE_NAMES.VIDEOS, id)
+    } catch (error) {
+      console.warn('Erreur lors de la suppression depuis IndexedDB:', error)
+    }
+    
+    // Supprimer de la liste
     setVideos(videos.filter(video => video.id !== id))
   }
 
