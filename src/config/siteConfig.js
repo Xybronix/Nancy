@@ -1,5 +1,4 @@
 // Configuration du site
-// Mettez ENABLE_EDITING à false pour désactiver toutes les modifications (sauf les souhaits)
 export const SITE_CONFIG = {
   // Activez/désactivez l'édition des contenus
   // true = mode édition (développement)
@@ -14,6 +13,5 @@ export const SITE_CONFIG = {
   BIRTHDAY_MONTH: 0, // Mois (0 = janvier, 11 = décembre)
   
   // Nombre de jours après l'anniversaire pour commencer le compteur de l'année suivante
-  // Par défaut: 1 jour (le compteur commence le 1er février si l'anniversaire est le 31 janvier)
-  COUNTDOWN_START_OFFSET_DAYS: 1,
+  COUNTDOWN_START_OFFSET_DAYS: 5,
 }
